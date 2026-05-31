@@ -33,6 +33,18 @@ router.post('/', async (req, res) => {
   }
 });
 
+// Backwards-compatibility: POST /api/cart/add -> POST /api/cart
+router.post('/add', async (req, res) => {
+  try {
+    const { product_id, quantity } = req.body;
+    const item = await CartItem.create({ user_id: req.user.sub, product_id, quantity });
+    res.json(item);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 router.patch('/:id', async (req, res) => {
   try {
     const { quantity } = req.body;

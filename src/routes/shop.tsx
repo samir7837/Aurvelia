@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+
 import { categories, type Product } from "@/lib/products";
 import { ProductCard } from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
@@ -38,15 +38,16 @@ function Shop() {
   const { data: products = [], isLoading } = useQuery({
     queryKey: ["products", "shop", category, sort],
     queryFn: async (): Promise<Product[]> => {
-      let q = supabase.from("products").select("*").eq("is_active", true);
-      if (category) q = q.eq("category", category);
-      if (sort === "price-asc") q = q.order("price", { ascending: true });
-      else if (sort === "price-desc") q = q.order("price", { ascending: false });
-      else if (sort === "rating") q = q.order("rating", { ascending: false });
-      else q = q.order("review_count", { ascending: false });
-      const { data, error } = await q;
-      if (error) throw error;
-      return data as Product[];
+      const params = new URLSearchParams();
+      params.set('active', 'true');
+      if (category) params.set('category', category);
+      if (sort === 'price-asc') params.set('sort', 'price-asc');
+      else if (sort === 'price-desc') params.set('sort', 'price-desc');
+      else if (sort === 'rating') params.set('sort', 'rating');
+      else params.set('sort', 'review_count');
+      const res = await fetch(`/api/products?${params.toString()}`);
+      if (!res.ok) throw new Error('Could not load products');
+      return (await res.json()) as Product[];
     },
   });
 

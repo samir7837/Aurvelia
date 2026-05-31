@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -31,34 +30,28 @@ function AdminMessages() {
   const { data: messages = [] } = useQuery({
     queryKey: ["admin", "messages"],
     queryFn: async (): Promise<Message[]> => {
-      const { data, error } = await supabase
-        .from("contact_messages")
-        .select("*")
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data as Message[];
+      const token = localStorage.getItem('aurvelia_token');
+      const res = await fetch('/api/admin/messages', { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+      if (!res.ok) throw new Error('Could not load messages');
+      return (await res.json()) as Message[];
     },
   });
 
   const { data: subscribers = [] } = useQuery({
     queryKey: ["admin", "subscribers"],
     queryFn: async (): Promise<Subscriber[]> => {
-      const { data, error } = await supabase
-        .from("newsletter_subscribers")
-        .select("*")
-        .order("subscribed_at", { ascending: false });
-      if (error) throw error;
-      return data as Subscriber[];
+      const token = localStorage.getItem('aurvelia_token');
+      const res = await fetch('/api/admin/subscribers', { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+      if (!res.ok) throw new Error('Could not load subscribers');
+      return (await res.json()) as Subscriber[];
     },
   });
 
   const setStatus = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      const { error } = await supabase
-        .from("contact_messages")
-        .update({ status })
-        .eq("id", id);
-      if (error) throw error;
+      const token = localStorage.getItem('aurvelia_token');
+      const res = await fetch(`/api/admin/messages/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ status }) });
+      if (!res.ok) throw new Error('Could not update message');
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin", "messages"] });

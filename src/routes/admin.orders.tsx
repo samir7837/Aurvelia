@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 import { formatINR } from "@/lib/products";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -42,22 +41,18 @@ function AdminOrders() {
   const { data: orders = [], isLoading } = useQuery({
     queryKey: ["admin", "orders-full"],
     queryFn: async (): Promise<Order[]> => {
-      const { data, error } = await supabase
-        .from("orders")
-        .select("*")
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data as unknown as Order[];
+      const token = localStorage.getItem('aurvelia_token');
+      const res = await fetch('/api/admin/orders', { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+      if (!res.ok) throw new Error('Could not load orders');
+      return (await res.json()) as Order[];
     },
   });
 
   const updateStatus = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      const { error } = await supabase
-        .from("orders")
-        .update({ order_status: status })
-        .eq("id", id);
-      if (error) throw error;
+      const token = localStorage.getItem('aurvelia_token');
+      const res = await fetch(`/api/admin/orders/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ order_status: status }) });
+      if (!res.ok) throw new Error('Could not update order');
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin", "orders-full"] });

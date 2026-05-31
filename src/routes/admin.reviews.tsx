@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Trash2 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+
 import { StarRating } from "@/components/StarRating";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -28,28 +28,24 @@ function AdminReviews() {
   const { data: reviews = [], isLoading } = useQuery({
     queryKey: ["admin", "reviews"],
     queryFn: async (): Promise<(ReviewRow & { productName: string })[]> => {
-      const { data, error } = await supabase
-        .from("reviews")
-        .select("*")
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      const rows = (data ?? []) as ReviewRow[];
+      const res = await fetch('/api/reviews');
+      if (!res.ok) throw new Error('Could not load reviews');
+      const rows = (await res.json()) as ReviewRow[];
       const ids = Array.from(new Set(rows.map((r) => r.product_id)));
-      const { data: products } = await supabase
-        .from("products")
-        .select("id, name")
-        .in("id", ids);
+      const prodRes = await fetch(`/api/products?ids=${ids.join(',')}`);
+      const products = prodRes.ok ? (await prodRes.json()) : [];
       return rows.map((r) => ({
         ...r,
-        productName: products?.find((p) => p.id === r.product_id)?.name ?? "Unknown product",
+        productName: products.find((p: any) => p.id === r.product_id)?.name ?? 'Unknown product',
       }));
     },
   });
 
   const remove = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("reviews").delete().eq("id", id);
-      if (error) throw error;
+      const token = localStorage.getItem('aurvelia_token');
+      const res = await fetch(`/api/reviews/${id}`, { method: 'DELETE', headers: token ? { Authorization: `Bearer ${token}` } : {} });
+      if (!res.ok) throw new Error('Could not delete review');
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin", "reviews"] });

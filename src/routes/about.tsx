@@ -1,7 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Leaf, FlaskConical, ShieldCheck, Heart } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 
 interface StoryContent {
@@ -36,12 +35,9 @@ function AboutPage() {
   const { data: story } = useQuery({
     queryKey: ["site_content", "our_story"],
     queryFn: async (): Promise<StoryContent | null> => {
-      const { data, error } = await supabase
-        .from("site_content")
-        .select("value")
-        .eq("key", "our_story")
-        .maybeSingle();
-      if (error) throw error;
+      const res = await fetch('/api/site_content?key=our_story');
+      if (!res.ok) return null;
+      const data = await res.json();
       return (data?.value as unknown as StoryContent) ?? null;
     },
   });

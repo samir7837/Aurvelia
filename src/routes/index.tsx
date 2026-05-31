@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, Leaf, FlaskConical, ShieldCheck } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+
 import { categories, type Product } from "@/lib/products";
 import { ProductCard } from "@/components/ProductCard";
 import { categoryImages } from "@/lib/products";
@@ -31,14 +31,9 @@ function Index() {
   const { data: featured = [] } = useQuery({
     queryKey: ["products", "featured-home"],
     queryFn: async (): Promise<Product[]> => {
-      const { data, error } = await supabase
-        .from("products")
-        .select("*")
-        .eq("is_active", true)
-        .order("review_count", { ascending: false })
-        .limit(8);
-      if (error) throw error;
-      return data as Product[];
+      const res = await fetch('/api/products?limit=8&active=true');
+      if (!res.ok) throw new Error('Could not load products');
+      return (await res.json()) as Product[];
     },
   });
 

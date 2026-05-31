@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+
 import {
   Accordion,
   AccordionContent,
@@ -37,13 +37,9 @@ function FaqPage() {
   const { data: faqs = [], isLoading } = useQuery({
     queryKey: ["faqs"],
     queryFn: async (): Promise<Faq[]> => {
-      const { data, error } = await supabase
-        .from("faqs")
-        .select("*")
-        .eq("is_active", true)
-        .order("sort_order", { ascending: true });
-      if (error) throw error;
-      return data as Faq[];
+      const res = await fetch('/api/faqs?active=true');
+      if (!res.ok) throw new Error('Could not load faqs');
+      return (await res.json()) as Faq[];
     },
   });
 

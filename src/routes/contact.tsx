@@ -3,7 +3,7 @@ import { useState } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
 import { Mail, MapPin, Phone } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -48,13 +48,18 @@ function ContactPage() {
       return;
     }
     setLoading(true);
-    const { error } = await supabase.from("contact_messages").insert(parsed.data);
-    setLoading(false);
-    if (error) {
+    try {
+      const res = await fetch('/api/contact', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(parsed.data) });
+      setLoading(false);
+      if (!res.ok) {
+        toast.error("Could not send your message. Please try again.");
+      } else {
+        toast.success("Message sent! We'll be in touch soon.");
+        (e.target as HTMLFormElement).reset();
+      }
+    } catch (err) {
+      setLoading(false);
       toast.error("Could not send your message. Please try again.");
-    } else {
-      toast.success("Message sent! We'll be in touch soon.");
-      (e.target as HTMLFormElement).reset();
     }
   };
 

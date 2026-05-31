@@ -3,7 +3,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Pencil } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { formatINR, type Product } from "@/lib/products";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,30 +36,17 @@ function AdminProducts() {
   const { data: products = [], isLoading } = useQuery({
     queryKey: ["admin", "products"],
     queryFn: async (): Promise<Product[]> => {
-      const { data, error } = await supabase
-        .from("products")
-        .select("*")
-        .order("name", { ascending: true });
-      if (error) throw error;
-      return data as Product[];
+      const res = await fetch('/api/products?sort=name');
+      if (!res.ok) throw new Error('Could not load products');
+      return (await res.json()) as Product[];
     },
   });
 
   const save = useMutation({
     mutationFn: async (p: Product) => {
-      const { error } = await supabase
-        .from("products")
-        .update({
-          price: p.price,
-          sale_price: p.sale_price,
-          stock: p.stock,
-          is_active: p.is_active,
-          featured: p.featured,
-          best_seller: p.best_seller,
-          new_arrival: p.new_arrival,
-        })
-        .eq("id", p.id);
-      if (error) throw error;
+      const token = localStorage.getItem('aurvelia_token');
+      const res = await fetch(`/api/products/${p.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json', Authorization: token ? `Bearer ${token}` : '' }, body: JSON.stringify({ price: p.price, sale_price: p.sale_price, stock: p.stock, is_active: p.is_active, featured: p.featured, best_seller: p.best_seller, new_arrival: p.new_arrival }) });
+      if (!res.ok) throw new Error('Could not update product');
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin", "products"] });

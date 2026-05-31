@@ -1,67 +1,82 @@
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  type ReactNode,
-} from "react";
-import type { Session, User } from "@supabase/supabase-js";
-import { useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 
 interface AuthState {
-  user: User | null;
-  session: Session | null;
+  user: { id: string; email: string } | null;
+  token: string | null;
   isAdmin: boolean;
   loading: boolean;
   signOut: () => Promise<void>;
+  signIn: (token: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthState | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<{ id: string; email: string } | null>(null);
+  const [token, setToken] = useState<string | null>(() => localStorage.getItem("aurvelia_token"));
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
-  const queryClient = useQueryClient();
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, newSession) => {
-        setSession(newSession);
-        setUser(newSession?.user ?? null);
+    async function load() {
+      setLoading(true);
+      const t = localStorage.getItem("aurvelia_token");
+      setToken(t);
+      if (!t) {
+        setUser(null);
+        setIsAdmin(false);
         setLoading(false);
-        queryClient.invalidateQueries();
-        if (newSession?.user) {
-          setTimeout(async () => {
-            const { data } = await supabase
-              .from("user_roles")
-              .select("role")
-              .eq("user_id", newSession.user.id);
-            setIsAdmin(!!data?.some((r) => r.role === "admin"));
-          }, 0);
-        } else {
-          setIsAdmin(false);
-        }
-      },
-    );
-
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-      setUser(data.session?.user ?? null);
+        return;
+      }
+      try {
+        const res = await fetch(`/api/auth/me`, { headers: { Authorization: `Bearer ${t}` } });
+        if (!res.ok) throw new Error("not auth");
+        const data = await res.json();
+        setUser(data.user ?? null);
+        setIsAdmin(!!data.isAdmin);
+      } catch (err) {
+        setUser(null);
+        setIsAdmin(false);
+        setToken(null);
+        localStorage.removeItem("aurvelia_token");
+      }
       setLoading(false);
-    });
+    }
+    load();
 
-    return () => subscription.unsubscribe();
-  }, [queryClient]);
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === "aurvelia_token") {
+        // token changed in another tab
+        load();
+      }
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
+
+  const signIn = async (t: string) => {
+    localStorage.setItem("aurvelia_token", t);
+    setToken(t);
+    try {
+      const res = await fetch(`/api/auth/me`, { headers: { Authorization: `Bearer ${t}` } });
+      const data = await res.json();
+      setUser(data.user ?? null);
+      setIsAdmin(!!data.isAdmin);
+    } catch (err) {
+      setUser(null);
+      setIsAdmin(false);
+    }
+  };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    localStorage.removeItem("aurvelia_token");
+    setToken(null);
+    setUser(null);
+    setIsAdmin(false);
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, isAdmin, loading, signOut }}>
+    <AuthContext.Provider value={{ user, token, isAdmin, loading, signOut, signIn }}>
       {children}
     </AuthContext.Provider>
   );

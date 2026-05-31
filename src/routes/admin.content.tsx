@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Plus, Trash2 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -29,12 +29,10 @@ function AdminContent() {
   const { data: story } = useQuery({
     queryKey: ["admin", "our_story"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("site_content")
-        .select("value")
-        .eq("key", "our_story")
-        .maybeSingle();
-      if (error) throw error;
+      const token = localStorage.getItem('aurvelia_token');
+      const res = await fetch('/api/site_content?key=our_story', { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+      if (!res.ok) throw new Error('Could not load story');
+      const data = await res.json();
       return (data?.value as { heading?: string; body?: string }) ?? {};
     },
   });
@@ -50,10 +48,9 @@ function AdminContent() {
 
   const saveStory = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase
-        .from("site_content")
-        .upsert({ key: "our_story", value: { heading, body } }, { onConflict: "key" });
-      if (error) throw error;
+      const token = localStorage.getItem('aurvelia_token');
+      const res = await fetch('/api/site_content/our_story', { method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ value: { heading, body } }) });
+      if (!res.ok) throw new Error('Could not save story');
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["site_content", "our_story"] });
@@ -66,24 +63,17 @@ function AdminContent() {
   const { data: faqs = [] } = useQuery({
     queryKey: ["admin", "faqs"],
     queryFn: async (): Promise<Faq[]> => {
-      const { data, error } = await supabase
-        .from("faqs")
-        .select("*")
-        .order("sort_order", { ascending: true });
-      if (error) throw error;
-      return data as Faq[];
+      const res = await fetch('/api/faqs');
+      if (!res.ok) throw new Error('Could not load faqs');
+      return (await res.json()) as Faq[];
     },
   });
 
   const addFaq = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from("faqs").insert({
-        question: "New question",
-        answer: "Answer here",
-        category: "General",
-        sort_order: faqs.length + 1,
-      });
-      if (error) throw error;
+      const token = localStorage.getItem('aurvelia_token');
+      const res = await fetch('/api/faqs', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ question: 'New question', answer: 'Answer here', category: 'General', sort_order: (faqs.length || 0) + 1 }) });
+      if (!res.ok) throw new Error('Could not add FAQ');
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin", "faqs"] });
@@ -94,16 +84,9 @@ function AdminContent() {
 
   const saveFaq = useMutation({
     mutationFn: async (f: Faq) => {
-      const { error } = await supabase
-        .from("faqs")
-        .update({
-          question: f.question,
-          answer: f.answer,
-          category: f.category,
-          is_active: f.is_active,
-        })
-        .eq("id", f.id);
-      if (error) throw error;
+      const token = localStorage.getItem('aurvelia_token');
+      const res = await fetch(`/api/faqs/${f.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ question: f.question, answer: f.answer, category: f.category, is_active: f.is_active }) });
+      if (!res.ok) throw new Error('Could not save FAQ');
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin", "faqs"] });
@@ -115,8 +98,9 @@ function AdminContent() {
 
   const deleteFaq = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("faqs").delete().eq("id", id);
-      if (error) throw error;
+      const token = localStorage.getItem('aurvelia_token');
+      const res = await fetch(`/api/faqs/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+      if (!res.ok) throw new Error('Could not delete FAQ');
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin", "faqs"] });

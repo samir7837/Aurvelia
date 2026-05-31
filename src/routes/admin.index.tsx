@@ -1,14 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import {
-  IndianRupee,
-  ShoppingCart,
-  Package,
-  Mail,
-  Star,
-  AlertTriangle,
-} from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { IndianRupee, ShoppingCart, Package, Mail, Star, AlertTriangle } from "lucide-react";
 import { formatINR } from "@/lib/products";
 
 export const Route = createFileRoute("/admin/")({
@@ -27,60 +19,37 @@ function AdminOverview() {
   const { data: orders = [] } = useQuery({
     queryKey: ["admin", "orders"],
     queryFn: async (): Promise<OrderRow[]> => {
-      const { data, error } = await supabase
-        .from("orders")
-        .select("id, order_number, total, order_status, created_at")
-        .order("created_at", { ascending: false });
-      if (error) throw error;
+      const token = localStorage.getItem('aurvelia_token');
+      const res = await fetch('/api/admin/orders', { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+      if (!res.ok) throw new Error('Could not load orders');
+      const data = await res.json();
       return data as OrderRow[];
     },
   });
 
-  const { data: productCount = 0 } = useQuery({
-    queryKey: ["admin", "product-count"],
+  const { data: statsData = { products: 0, subscribers: 0, reviews: 0 } } = useQuery<any>({
+    queryKey: ["admin", "stats"],
     queryFn: async () => {
-      const { count, error } = await supabase
-        .from("products")
-        .select("*", { count: "exact", head: true });
-      if (error) throw error;
-      return count ?? 0;
+      const token = localStorage.getItem('aurvelia_token');
+      const res = await fetch('/api/admin/stats', { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+      if (!res.ok) throw new Error('Could not load stats');
+      return await res.json();
     },
   });
 
-  const { data: lowStock = [] } = useQuery({
-    queryKey: ["admin", "low-stock"],
+  const { data: allProducts = [] } = useQuery({
+    queryKey: ["admin", "products-all"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("products")
-        .select("id, name, stock, slug")
-        .lte("stock", 5)
-        .order("stock", { ascending: true });
-      if (error) throw error;
-      return data ?? [];
+      const res = await fetch('/api/products');
+      if (!res.ok) throw new Error('Could not load products');
+      return await res.json();
     },
   });
 
-  const { data: subscriberCount = 0 } = useQuery({
-    queryKey: ["admin", "subscriber-count"],
-    queryFn: async () => {
-      const { count, error } = await supabase
-        .from("newsletter_subscribers")
-        .select("*", { count: "exact", head: true });
-      if (error) throw error;
-      return count ?? 0;
-    },
-  });
-
-  const { data: reviewCount = 0 } = useQuery({
-    queryKey: ["admin", "review-count"],
-    queryFn: async () => {
-      const { count, error } = await supabase
-        .from("reviews")
-        .select("*", { count: "exact", head: true });
-      if (error) throw error;
-      return count ?? 0;
-    },
-  });
+  const productCount = statsData.products ?? 0;
+  const subscriberCount = statsData.subscribers ?? 0;
+  const reviewCount = statsData.reviews ?? 0;
+  const lowStock = allProducts.filter((p: any) => p.stock <= 5).sort((a: any, b: any) => a.stock - b.stock);
 
   const revenue = orders.reduce((s, o) => s + Number(o.total), 0);
 

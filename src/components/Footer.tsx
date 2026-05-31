@@ -1,7 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 import { categories } from "@/lib/products";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,13 +13,19 @@ export function Footer() {
     e.preventDefault();
     if (!email) return;
     setLoading(true);
-    const { error } = await supabase.from("newsletter_subscribers").insert({ email });
-    setLoading(false);
-    if (error) {
-      toast.error("Could not subscribe. Try again.");
-    } else {
-      toast.success("Welcome to Aurvelia — check your inbox.");
-      setEmail("");
+    try {
+      const res = await fetch('/api/newsletter', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) });
+      const data = await res.json();
+      setLoading(false);
+      if (!res.ok) {
+        toast.error('Could not subscribe. Try again.');
+      } else {
+        toast.success('Welcome to Aurvelia — check your inbox.');
+        setEmail('');
+      }
+    } catch (err) {
+      setLoading(false);
+      toast.error('Could not subscribe. Try again.');
     }
   };
 

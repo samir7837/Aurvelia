@@ -2,7 +2,6 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Package } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/auth";
 import { formatINR } from "@/lib/products";
 import { Button } from "@/components/ui/button";
@@ -42,12 +41,11 @@ function AccountPage() {
     queryKey: ["orders", user?.id],
     enabled: !!user,
     queryFn: async (): Promise<Order[]> => {
-      const { data, error } = await supabase
-        .from("orders")
-        .select("*")
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data as unknown as Order[];
+      const token = localStorage.getItem('aurvelia_token');
+      const res = await fetch('/api/orders', { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+      if (!res.ok) throw new Error('Could not load orders');
+      const data = await res.json();
+      return data as Order[];
     },
   });
 

@@ -1,6 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/auth";
 import type { Product } from "@/lib/products";
 
@@ -18,23 +17,11 @@ export function useWishlist() {
     queryKey: ["wishlist", user?.id],
     enabled: !!user,
     queryFn: async (): Promise<WishlistRow[]> => {
-      const { data: rows, error } = await supabase
-        .from("wishlist_items")
-        .select("id, product_id")
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      if (!rows?.length) return [];
-      const ids = rows.map((r) => r.product_id);
-      const { data: products } = await supabase
-        .from("products")
-        .select("*")
-        .in("id", ids);
-      return rows
-        .map((r) => ({
-          ...r,
-          product: products?.find((p) => p.id === r.product_id) as Product,
-        }))
-        .filter((r) => r.product);
+      const token = localStorage.getItem('aurvelia_token');
+      const res = await fetch('/api/wishlist', { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+      if (!res.ok) throw new Error('Could not load wishlist');
+      const data = await res.json();
+      return data as WishlistRow[];
     },
   });
 
@@ -42,21 +29,15 @@ export function useWishlist() {
 
   const toggle = useMutation({
     mutationFn: async (productId: string) => {
-      if (!user) throw new Error("auth");
+      if (!user) throw new Error('auth');
+      const token = localStorage.getItem('aurvelia_token');
       const existing = items.find((i) => i.product_id === productId);
       if (existing) {
-        const { error } = await supabase
-          .from("wishlist_items")
-          .delete()
-          .eq("id", existing.id);
-        if (error) throw error;
-        return "removed";
+        await fetch(`/api/wishlist/${existing.id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+        return 'removed';
       }
-      const { error } = await supabase
-        .from("wishlist_items")
-        .insert({ user_id: user.id, product_id: productId });
-      if (error) throw error;
-      return "added";
+      await fetch('/api/wishlist', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ product_id: productId }) });
+      return 'added';
     },
     onSuccess: (result) => {
       qc.invalidateQueries({ queryKey: ["wishlist"] });

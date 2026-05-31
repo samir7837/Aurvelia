@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+
 import { useAuth } from "@/context/auth";
 import { useCart } from "@/hooks/useCart";
 import { formatINR } from "@/lib/products";
@@ -62,25 +62,17 @@ function CheckoutPage() {
       quantity: i.quantity,
     }));
 
-    const { error } = await supabase.from("orders").insert({
-      user_id: user.id,
-      order_number: orderNumber,
-      items: orderItems,
-      subtotal,
-      tax,
-      shipping_fee: shipping,
-      total,
-      shipping_address: address,
-      payment_method: payment,
-      payment_status: "paid",
-      order_status: "confirmed",
-      transaction_id: "TXN" + Math.random().toString(36).slice(2, 11).toUpperCase(),
-      payment_id: "PAY" + Math.random().toString(36).slice(2, 11).toUpperCase(),
-    });
-
-    if (error) {
+    try {
+      const token = localStorage.getItem('aurvelia_token');
+      const res = await fetch('/api/orders', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: token ? `Bearer ${token}` : '' }, body: JSON.stringify({ user_id: user.id, order_number: orderNumber, items: orderItems, subtotal, tax, shipping_fee: shipping, total, shipping_address: address, payment_method: payment, payment_status: 'paid', order_status: 'confirmed', transaction_id: 'TXN' + Math.random().toString(36).slice(2, 11).toUpperCase(), payment_id: 'PAY' + Math.random().toString(36).slice(2, 11).toUpperCase() }) });
+      if (!res.ok) {
+        setProcessing(false);
+        toast.error('Payment failed. Please try again.');
+        return;
+      }
+    } catch (err) {
       setProcessing(false);
-      toast.error("Payment failed. Please try again.");
+      toast.error('Payment failed. Please try again.');
       return;
     }
 
