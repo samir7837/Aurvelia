@@ -2,6 +2,8 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 
 import { categories, type Product } from "@/lib/products";
+import { apiUrl, apiFetch } from "@/lib/api";
+import fallbackProducts from "@/lib/fallback/products";
 import { ProductCard } from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
 import {
@@ -45,9 +47,19 @@ function Shop() {
       else if (sort === 'price-desc') params.set('sort', 'price-desc');
       else if (sort === 'rating') params.set('sort', 'rating');
       else params.set('sort', 'review_count');
-      const res = await fetch(`/api/products?${params.toString()}`);
-      if (!res.ok) throw new Error('Could not load products');
-      return (await res.json()) as Product[];
+      try {
+        const res = await apiFetch(`/api/products?${params.toString()}`);
+        if (!res.ok) throw new Error('Could not load products');
+        const data = (await res.json()) as Product[];
+        if (!data || data.length === 0) {
+          // API returned empty — use local fallback
+          return fallbackProducts.filter((p) => p.is_active && (!category || p.category === category));
+        }
+        return data as Product[];
+      } catch (err) {
+        // On error, use local fallback
+        return fallbackProducts.filter((p) => p.is_active && (!category || p.category === category));
+      }
     },
   });
 

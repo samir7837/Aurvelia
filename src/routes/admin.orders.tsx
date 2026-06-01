@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { formatINR } from "@/lib/products";
+import { apiUrl, apiFetch } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -42,7 +43,7 @@ function AdminOrders() {
     queryKey: ["admin", "orders-full"],
     queryFn: async (): Promise<Order[]> => {
       const token = localStorage.getItem('aurvelia_token');
-        const res = await fetch(apiUrl('/api/admin/orders'), { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+        const res = await apiFetch('/api/admin/orders', { headers: token ? { Authorization: `Bearer ${token}` } : {} });
       if (!res.ok) throw new Error('Could not load orders');
       return (await res.json()) as Order[];
     },
@@ -51,7 +52,7 @@ function AdminOrders() {
   const updateStatus = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
       const token = localStorage.getItem('aurvelia_token');
-        const res = await fetch(apiUrl(`/api/admin/orders/${id}`), { method: 'PATCH', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ order_status: status }) });
+        const res = await apiFetch(`/api/admin/orders/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ order_status: status }) });
       if (!res.ok) throw new Error('Could not update order');
     },
     onSuccess: () => {

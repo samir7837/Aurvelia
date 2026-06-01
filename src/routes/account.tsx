@@ -7,7 +7,7 @@ import { formatINR } from "@/lib/products";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { apiUrl } from "@/lib/api";
+import { apiUrl, apiFetch } from "@/lib/api";
 
 export const Route = createFileRoute("/account")({
   head: () => ({ meta: [{ title: "My Account — Aurvelia" }] }),
@@ -43,7 +43,7 @@ function AccountPage() {
     enabled: !!user,
     queryFn: async (): Promise<Order[]> => {
       const token = localStorage.getItem('aurvelia_token');
-      const res = await fetch(apiUrl('/api/orders'), { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+      const res = await apiFetch('/api/orders', { headers: token ? { Authorization: `Bearer ${token}` } : {} });
       if (!res.ok) throw new Error('Could not load orders');
       const data = await res.json();
       return data as Order[];

@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { apiUrl } from "@/lib/api";
+import { apiUrl, apiFetch } from "@/lib/api";
 
 interface AuthState {
   user: { id: string; email: string } | null;
@@ -31,7 +31,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
       try {
-        const res = await fetch(apiUrl(`/api/auth/me`), { headers: { Authorization: `Bearer ${t}` } });
+        const res = await apiFetch(`/api/auth/me`, { headers: { Authorization: `Bearer ${t}` } });
         if (!res.ok) throw new Error("not auth");
         const data = await res.json();
         setUser(data.user ?? null);
@@ -65,7 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (typeof window !== "undefined") localStorage.setItem("aurvelia_token", t);
     setToken(t);
     try {
-      const res = await fetch(apiUrl(`/api/auth/me`), { headers: { Authorization: `Bearer ${t}` } });
+      const res = await apiFetch(`/api/auth/me`, { headers: { Authorization: `Bearer ${t}` } });
       const data = await res.json();
       setUser(data.user ?? null);
       setIsAdmin(!!data.isAdmin);

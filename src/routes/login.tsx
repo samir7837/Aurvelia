@@ -1,12 +1,13 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/context/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { apiUrl } from "@/lib/api";
+import { apiUrl, apiFetch } from "@/lib/api";
 
 export const Route = createFileRoute("/login")({
   head: () => ({ meta: [{ title: "Sign In — Aurvelia" }] }),
@@ -24,12 +25,15 @@ function LoginPage() {
 
   const { signIn } = useAuth();
 
+  const [showSignInPassword, setShowSignInPassword] = useState(false);
+  const [showSignUpPassword, setShowSignUpPassword] = useState(false);
+
   const signInHandler = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = new FormData(e.currentTarget);
     setLoading(true);
     try {
-      const res = await fetch(apiUrl('/api/auth/login'), {
+      const res = await apiFetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: String(form.get('email')), password: String(form.get('password')) }),
@@ -50,7 +54,7 @@ function LoginPage() {
     const form = new FormData(e.currentTarget);
     setLoading(true);
     try {
-      const res = await fetch(apiUrl('/api/auth/register'), {
+      const res = await apiFetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: String(form.get('email')), password: String(form.get('password')), full_name: String(form.get('name')) }),
@@ -87,7 +91,12 @@ function LoginPage() {
             </div>
             <div>
               <Label htmlFor="si-pass">Password</Label>
-              <Input id="si-pass" name="password" type="password" required className="mt-1" />
+              <div className="relative mt-1">
+                <Input id="si-pass" name="password" type={showSignInPassword ? 'text' : 'password'} required />
+                <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2" onClick={() => setShowSignInPassword((s) => !s)} aria-label="Toggle password">
+                  {showSignInPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
               Sign In
@@ -107,7 +116,12 @@ function LoginPage() {
             </div>
             <div>
               <Label htmlFor="su-pass">Password</Label>
-              <Input id="su-pass" name="password" type="password" minLength={6} required className="mt-1" />
+              <div className="relative mt-1">
+                <Input id="su-pass" name="password" type={showSignUpPassword ? 'text' : 'password'} minLength={6} required />
+                <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2" onClick={() => setShowSignUpPassword((s) => !s)} aria-label="Toggle password">
+                  {showSignUpPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
               Create Account

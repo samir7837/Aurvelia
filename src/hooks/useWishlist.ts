@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useAuth } from "@/context/auth";
 import type { Product } from "@/lib/products";
-import { apiUrl } from "@/lib/api";
+import { apiUrl, apiFetch } from "@/lib/api";
 
 export interface WishlistRow {
   id: string;
@@ -19,7 +19,7 @@ export function useWishlist() {
     enabled: !!user,
     queryFn: async (): Promise<WishlistRow[]> => {
       const token = localStorage.getItem('aurvelia_token');
-      const res = await fetch(apiUrl('/api/wishlist'), { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+      const res = await apiFetch('/api/wishlist', { headers: token ? { Authorization: `Bearer ${token}` } : {} });
       if (!res.ok) throw new Error('Could not load wishlist');
       const data = await res.json();
       return data as WishlistRow[];
@@ -34,10 +34,10 @@ export function useWishlist() {
       const token = localStorage.getItem('aurvelia_token');
       const existing = items.find((i) => i.product_id === productId);
       if (existing) {
-        await fetch(apiUrl(`/api/wishlist/${existing.id}`), { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+        await apiFetch(`/api/wishlist/${existing.id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
         return 'removed';
       }
-      await fetch(apiUrl('/api/wishlist'), { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ product_id: productId }) });
+      await apiFetch('/api/wishlist', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ product_id: productId }) });
       return 'added';
     },
     onSuccess: (result) => {

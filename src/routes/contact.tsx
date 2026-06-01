@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { apiUrl } from "@/lib/api";
+import { apiUrl, apiFetch } from "@/lib/api";
 
 export const Route = createFileRoute("/contact")({
   head: () => ({
@@ -50,7 +50,7 @@ function ContactPage() {
     }
     setLoading(true);
     try {
-      const res = await fetch(apiUrl('/api/contact'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(parsed.data) });
+      const res = await apiFetch('/api/contact', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(parsed.data) });
       setLoading(false);
       if (!res.ok) {
         toast.error("Could not send your message. Please try again.");

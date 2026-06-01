@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { IndianRupee, ShoppingCart, Package, Mail, Star, AlertTriangle } from "lucide-react";
-import { apiUrl } from "@/lib/api";
+import { apiUrl, apiFetch } from "@/lib/api";
 import { formatINR } from "@/lib/products";
 
 export const Route = createFileRoute("/admin/")({
@@ -21,7 +21,7 @@ function AdminOverview() {
     queryKey: ["admin", "orders"],
     queryFn: async (): Promise<OrderRow[]> => {
       const token = localStorage.getItem('aurvelia_token');
-      const res = await fetch(apiUrl('/api/admin/orders'), { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+      const res = await apiFetch('/api/admin/orders', { headers: token ? { Authorization: `Bearer ${token}` } : {} });
       if (!res.ok) throw new Error('Could not load orders');
       const data = await res.json();
       return data as OrderRow[];
@@ -32,7 +32,7 @@ function AdminOverview() {
     queryKey: ["admin", "stats"],
     queryFn: async () => {
       const token = localStorage.getItem('aurvelia_token');
-      const res = await fetch(apiUrl('/api/admin/stats'), { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+      const res = await apiFetch('/api/admin/stats', { headers: token ? { Authorization: `Bearer ${token}` } : {} });
       if (!res.ok) throw new Error('Could not load stats');
       return await res.json();
     },
@@ -41,7 +41,7 @@ function AdminOverview() {
   const { data: allProducts = [] } = useQuery({
     queryKey: ["admin", "products-all"],
     queryFn: async () => {
-      const res = await fetch(apiUrl('/api/products'));
+      const res = await apiFetch('/api/products');
       if (!res.ok) throw new Error('Could not load products');
       return await res.json();
     },
