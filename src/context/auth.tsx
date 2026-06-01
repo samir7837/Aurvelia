@@ -13,14 +13,15 @@ const AuthContext = createContext<AuthState | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<{ id: string; email: string } | null>(null);
-  const [token, setToken] = useState<string | null>(() => localStorage.getItem("aurvelia_token"));
+  const getInitialToken = () => (typeof window !== "undefined" ? localStorage.getItem("aurvelia_token") : null);
+  const [token, setToken] = useState<string | null>(getInitialToken);
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function load() {
       setLoading(true);
-      const t = localStorage.getItem("aurvelia_token");
+      const t = typeof window !== "undefined" ? localStorage.getItem("aurvelia_token") : null;
       setToken(t);
       if (!t) {
         setUser(null);
@@ -46,16 +47,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const onStorage = (e: StorageEvent) => {
       if (e.key === "aurvelia_token") {
-        // token changed in another tab
         load();
       }
     };
-    window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
+    if (typeof window !== "undefined") {
+      window.addEventListener("storage", onStorage);
+    }
+    return () => {
+      if (typeof window !== "undefined") {
+        window.removeEventListener("storage", onStorage);
+      }
+    };
   }, []);
 
   const signIn = async (t: string) => {
-    localStorage.setItem("aurvelia_token", t);
+    if (typeof window !== "undefined") localStorage.setItem("aurvelia_token", t);
     setToken(t);
     try {
       const res = await fetch(`/api/auth/me`, { headers: { Authorization: `Bearer ${t}` } });
@@ -69,7 +75,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
-    localStorage.removeItem("aurvelia_token");
+    if (typeof window !== "undefined") localStorage.removeItem("aurvelia_token");
     setToken(null);
     setUser(null);
     setIsAdmin(false);
