@@ -1,167 +1,194 @@
-Aurvelia — MERN Portfolio Store
+# Aurvelia — MERN Portfolio Store
 
-Project overview
----------------
-Aurvelia is an e-commerce portfolio application (frontend + Express/Mongoose backend) demonstrating product browsing, cart, wishlist, orders, reviews, newsletter and an admin dashboard. The frontend is a Vite + React (TanStack Router/React Query) app. The backend is Node.js + Express with Mongoose (MongoDB Atlas) and JWT authentication.
+A full-stack e-commerce portfolio application built with the MERN stack, demonstrating product browsing, cart management, wishlists, orders, reviews, newsletters, and an admin dashboard.
 
-Tech stack
-----------
-- Frontend: React 19, TypeScript, Vite, TanStack Router, TanStack React Query
-- UI: Tailwind / Radix primitives, lucide-react icons
-- Backend: Node.js, Express, Mongoose, JWT (jsonwebtoken), bcryptjs
-- Database: MongoDB Atlas (recommended for production)
-- Dev tools: Nodemon (backend), Vite (frontend)
+---
 
-Features
---------
-- Product catalog (list / detail)
-- Auth: register / login / auth/me (JWT stored in localStorage)
-- Cart: add / list / update
-- Wishlist: add / list / delete
-- Orders: create and list (subtotal and order_number computed server-side)
-- Reviews: list and create
-- Newsletter and contact endpoints
-- Admin endpoints: stats, orders, reviews, messages, subscribers
+## Tech Stack
 
-Repository layout
------------------
-- `/src` — frontend source
-- `/backend` — backend Express app
-- `/dist` — frontend production build (client + server bundles)
-- `/backend/scripts` — seed and smoke-test scripts
+| Layer | Technologies |
+|---|---|
+| **Frontend** | React 19, TypeScript, Vite, TanStack Router, TanStack React Query |
+| **UI** | Tailwind CSS, Radix UI primitives, Lucide React icons |
+| **Backend** | Node.js, Express, Mongoose, JWT (`jsonwebtoken`), `bcryptjs` |
+| **Database** | MongoDB Atlas |
+| **Dev Tools** | Nodemon (backend), Vite HMR (frontend) |
 
-Installation
-------------
-Prerequisites: Node 18+ and npm, an account on MongoDB Atlas.
+---
 
-1. Clone repository
+## Features
+
+- **Product Catalog** — browsable product list with detail pages
+- **Authentication** — register, login, and `/auth/me` via JWT (stored in `localStorage`)
+- **Cart** — add, list, and update items
+- **Wishlist** — add, list, and remove items
+- **Orders** — create and list orders; subtotal and order number computed server-side
+- **Reviews** — list and submit product reviews
+- **Newsletter & Contact** — subscription and contact form endpoints
+- **Admin Dashboard** — stats, orders, reviews, messages, and subscriber management
+
+---
+
+## Repository Structure
+
+```
+aurvelia-glow-forge-main/
+├── src/               # Frontend source (React + Vite)
+├── backend/           # Express API + Mongoose models
+│   └── scripts/       # Seed and smoke-test scripts
+└── dist/              # Production build output
+    ├── client/        # Static frontend assets
+    └── server/        # Server-side bundles
+```
+
+---
+
+## Prerequisites
+
+- Node.js 18+
+- npm
+- A [MongoDB Atlas](https://www.mongodb.com/atlas) account
+
+---
+
+## Local Development Setup
+
+### 1. Clone and install
 
 ```bash
 git clone <repo-url>
 cd aurvelia-glow-forge-main
-```
 
-2. Install dependencies
-
-```bash
 npm install
 npm --prefix backend install
 ```
 
-Environment variables
----------------------
-Required for backend production and local development (set these on Render/Vercel or in `.env` for local):
+### 2. Configure environment variables
 
-- `MONGODB_URI` — MongoDB Atlas connection string (include username/password). Example:
-  mongodb+srv://<user>:<password>@cluster0.mongodb.net/aurvelia?retryWrites=true&w=majority
-- `JWT_SECRET` — Secret used to sign JWTs (keep private)
-- `PORT` — (optional) port for backend (default 4000)
+Create a `backend/.env` file:
 
-Local development setup
------------------------
-1. Create `backend/.env` containing at least:
-
-```
-MONGODB_URI=your_mongo_connection_string
+```env
+MONGODB_URI=mongodb+srv://<user>:<password>@cluster0.mongodb.net/aurvelia?retryWrites=true&w=majority
 JWT_SECRET=some_long_random_secret
 PORT=4000
 ```
 
-2. Start backend (development):
+| Variable | Description | Required |
+|---|---|---|
+| `MONGODB_URI` | MongoDB Atlas connection string | ✅ Yes |
+| `JWT_SECRET` | Secret used to sign JWTs — keep private | ✅ Yes |
+| `PORT` | Backend port (default: `4000`) | No |
 
+### 3. Start the development servers
+
+**Backend:**
 ```bash
 npm --prefix backend run dev
 ```
 
-3. Start frontend (development):
-
+**Frontend** (opens at `http://localhost:8080`):
 ```bash
 npm run dev
-# opens at http://localhost:8080
 ```
 
-4. Run the smoke tests to validate API flows:
+### 4. Run smoke tests
 
 ```bash
 node backend/scripts/smoke_tests.js
-# or individually: node backend/scripts/wishlist_test.js
+
+# Or run individual test scripts:
+node backend/scripts/wishlist_test.js
 ```
 
-Production build steps (local validation)
-----------------------------------------
-1. Frontend production build (Vite):
+---
+
+## Production Build
+
+### Frontend
 
 ```bash
 npm run build
 ```
 
-- Output directories: `dist/client` (static client assets) and `dist/server` (server-side bundles).
-- The repository already builds both client and server bundles. For simple static hosting, use `dist/client`.
+Outputs to:
+- `dist/client/` — static assets for hosting
+- `dist/server/` — server-side bundles
 
-2. Backend validation:
+For a simple static deployment, serve `dist/client/`.
 
-- The backend is a plain Node.js app. From the `backend` folder, ensure `backend/.env` is set and run:
+### Backend
 
 ```bash
-# from repo root
-Set-Location -LiteralPath "./backend"
+# From repo root
+cd backend
 node server.js
 ```
 
-- Alternatively use `npm --prefix backend run dev` for development with hot reload.
+---
 
-Build / start commands summary
------------------------------
-- Frontend build: `npm run build` (root)
-- Frontend preview (optional): `npm run preview` (root)
-- Frontend dev: `npm run dev` (root)
-- Backend dev: `npm --prefix backend run dev`
-- Backend start (production): `npm --prefix backend start` (runs `node server.js`)
+## Deployment
 
-Deployment instructions
------------------------
-Frontend (Vercel)
------------------
-1. Create a Vercel project and connect your Git repo.
-2. In Project Settings -> General, set the Root (if deploying from monorepo) to the repository root.
-3. Set the following build settings:
-   - Framework: Other / Vite
-   - Build Command: `npm run build`
-   - Output Directory: `dist/client`
-4. Environment variables: none required for client-only build.
-5. Deploy — Vercel will run the build and serve static assets from `dist/client`.
+### Frontend → Vercel
 
-Backend (Render)
------------------
-1. Create a new Web Service on Render (or other Node host).
-2. Connect your Git repo and set the Deploy Branch.
-3. Set the root directory for the service to the `backend` folder (or use the `Backend` root in Render's settings).
-4. Build Command: (none required) — Render will `npm install` automatically. If you want explicit, set: `npm install`.
-5. Start Command: `npm start` (this runs `node server.js` as defined in `backend/package.json`).
-6. Environment variables (must be configured in Render):
-   - `MONGODB_URI` — MongoDB Atlas connection string
-   - `JWT_SECRET` — JWT secret
-   - `PORT` — leave unset; Render will provide a port automatically (the app reads `process.env.PORT`)
-7. Deploy. After deploy, Render will assign a URL for the backend.
+1. Create a Vercel project and connect your Git repository.
+2. Configure build settings:
+   - **Framework:** Other / Vite
+   - **Build Command:** `npm run build`
+   - **Output Directory:** `dist/client`
+3. No environment variables are required for a client-only build.
+4. Deploy.
 
-Database (MongoDB Atlas)
-------------------------
-1. Create a free tier cluster on MongoDB Atlas.
-2. Create a database user with a strong password and give access to the cluster.
-3. Whitelist your server IP(s) or allow access from anywhere for testing (0.0.0.0/0).
-4. Get the connection string and set it as `MONGODB_URI` in Render (or in `backend/.env` for local development).
+### Backend → Render
 
-Verification checklist (post-deploy)
-------------------------------------
-- Visit frontend (Vercel URL) — pages load
-- Ensure backend URL (Render) is configured as `API_BASE` in frontend if you switch from relative `/api/...` to absolute URLs (current frontend expects same-origin `/api`—use a reverse proxy or set environment to point to backend)
-- Run `node backend/scripts/smoke_tests.js` (on a machine that can reach the deployed backend) with `PORT` or BASE URL adjusted
+1. Create a new **Web Service** on Render and connect your Git repository.
+2. Set the root directory to `backend/`.
+3. Configure the service:
+   - **Build Command:** `npm install`
+   - **Start Command:** `npm start`
+4. Add the following environment variables in Render's dashboard:
 
-Notes
------
-- The frontend build produces both client and server bundles; for a simple static deployment we use `dist/client`.
-- The backend requires `MONGODB_URI` and `JWT_SECRET` to be set in the environment for production.
+   | Variable | Value |
+   |---|---|
+   | `MONGODB_URI` | Your MongoDB Atlas connection string |
+   | `JWT_SECRET` | Your JWT secret |
+   | `PORT` | Leave unset — Render provides this automatically |
 
-Contact / Maintainer
---------------------
-This repo is prepared as a portfolio / MCA project. If you want me to produce exact Render / Vercel configuration files (e.g., `vercel.json` or Render YAML), tell me and I'll add them — but per your instruction I won't add new files unless you ask.
+5. Deploy. Render will assign a public URL for the backend.
+
+> **Note:** The current frontend uses relative `/api/...` paths, so it expects the backend to be on the same origin. If hosting frontend and backend separately, configure a reverse proxy or update `API_BASE` in the frontend to point to the Render URL.
+
+### Database → MongoDB Atlas
+
+1. Create a free-tier cluster on [MongoDB Atlas](https://www.mongodb.com/atlas).
+2. Create a database user and grant cluster access.
+3. Under **Network Access**, whitelist your server IP(s) or allow all (`0.0.0.0/0`) for testing.
+4. Copy the connection string and set it as `MONGODB_URI` in Render or `backend/.env`.
+
+---
+
+## Post-Deploy Checklist
+
+- [ ] Frontend loads at Vercel URL
+- [ ] Backend is live at Render URL
+- [ ] `MONGODB_URI` and `JWT_SECRET` are set in Render environment
+- [ ] Run smoke tests against deployed backend: `node backend/scripts/smoke_tests.js`
+- [ ] Verify API routing (same-origin or reverse proxy configured correctly)
+
+---
+
+## Scripts Reference
+
+| Command | Description |
+|---|---|
+| `npm run dev` | Start frontend dev server |
+| `npm run build` | Build frontend for production |
+| `npm run preview` | Preview production frontend build |
+| `npm --prefix backend run dev` | Start backend with hot reload (Nodemon) |
+| `npm --prefix backend start` | Start backend in production mode |
+
+---
+
+## Notes
+
+- This project is prepared as a portfolio / MCA project.
+- To add deployment config files (`vercel.json`, Render YAML), open an issue or reach out directly.
