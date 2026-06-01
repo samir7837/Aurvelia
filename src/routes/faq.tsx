@@ -36,18 +36,11 @@ export const Route = createFileRoute("/faq")({
 });
 
 function FaqPage() {
+  // Always render local FAQ content — backend may be unreliable
   const { data: faqs = [], isLoading } = useQuery({
-    queryKey: ["faqs"],
+    queryKey: ["faqs", "local"],
     queryFn: async (): Promise<Faq[]> => {
-      try {
-        const res = await apiFetch('/api/faqs?active=true');
-        if (!res.ok) throw new Error('Could not load faqs');
-        const data = (await res.json()) as Faq[];
-        if (!data || data.length === 0) return fallbackFaqs;
-        return data;
-      } catch (err) {
-        return fallbackFaqs;
-      }
+      return fallbackFaqs;
     },
   });
 

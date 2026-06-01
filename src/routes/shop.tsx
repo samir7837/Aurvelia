@@ -39,27 +39,16 @@ function Shop() {
 
   const { data: products = [], isLoading } = useQuery({
     queryKey: ["products", "shop", category, sort],
+    // Always use local fallbackProducts as the primary data source
     queryFn: async (): Promise<Product[]> => {
-      const params = new URLSearchParams();
-      params.set('active', 'true');
-      if (category) params.set('category', category);
-      if (sort === 'price-asc') params.set('sort', 'price-asc');
-      else if (sort === 'price-desc') params.set('sort', 'price-desc');
-      else if (sort === 'rating') params.set('sort', 'rating');
-      else params.set('sort', 'review_count');
-      try {
-        const res = await apiFetch(`/api/products?${params.toString()}`);
-        if (!res.ok) throw new Error('Could not load products');
-        const data = (await res.json()) as Product[];
-        if (!data || data.length === 0) {
-          // API returned empty — use local fallback
-          return fallbackProducts.filter((p) => p.is_active && (!category || p.category === category));
-        }
-        return data as Product[];
-      } catch (err) {
-        // On error, use local fallback
-        return fallbackProducts.filter((p) => p.is_active && (!category || p.category === category));
-      }
+      const list = fallbackProducts.filter((p) => p.is_active && (!category || p.category === category));
+      // client-side sorting
+      const sorted = [...list];
+      if (sort === 'price-asc') sorted.sort((a, b) => a.price - b.price);
+      else if (sort === 'price-desc') sorted.sort((a, b) => b.price - a.price);
+      else if (sort === 'rating') sorted.sort((a, b) => b.rating - a.rating);
+      else sorted.sort((a, b) => (b.review_count || 0) - (a.review_count || 0));
+      return sorted;
     },
   });
 

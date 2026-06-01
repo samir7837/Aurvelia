@@ -52,15 +52,7 @@ function ProductDetail() {
   const { data: product, isLoading } = useQuery({
     queryKey: ["product", slug],
     queryFn: async (): Promise<Product | null> => {
-      try {
-        const res = await apiFetch(`/api/products?slug=${encodeURIComponent(slug)}`);
-        if (!res.ok) throw new Error('Could not load product');
-        const data = await res.json();
-        if (data && data.length) return data[0] as Product;
-        // if API returned empty, try local fallback
-      } catch (err) {
-        // ignore and fallback to local
-      }
+      // Use local fallbackProducts as the authoritative product source
       return (fallbackProducts.find((p) => p.slug === slug) ?? null) as Product | null;
     },
   });
