@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import { apiUrl } from "@/lib/api";
 import {
   Dialog,
   DialogContent,
@@ -36,7 +37,7 @@ function AdminProducts() {
   const { data: products = [], isLoading } = useQuery({
     queryKey: ["admin", "products"],
     queryFn: async (): Promise<Product[]> => {
-      const res = await fetch('/api/products?sort=name');
+      const res = await fetch(apiUrl('/api/products?sort=name'));
       if (!res.ok) throw new Error('Could not load products');
       return (await res.json()) as Product[];
     },
@@ -45,7 +46,7 @@ function AdminProducts() {
   const save = useMutation({
     mutationFn: async (p: Product) => {
       const token = localStorage.getItem('aurvelia_token');
-      const res = await fetch(`/api/products/${p.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json', Authorization: token ? `Bearer ${token}` : '' }, body: JSON.stringify({ price: p.price, sale_price: p.sale_price, stock: p.stock, is_active: p.is_active, featured: p.featured, best_seller: p.best_seller, new_arrival: p.new_arrival }) });
+      const res = await fetch(apiUrl(`/api/products/${p.id}`), { method: 'PATCH', headers: { 'Content-Type': 'application/json', Authorization: token ? `Bearer ${token}` : '' }, body: JSON.stringify({ price: p.price, sale_price: p.sale_price, stock: p.stock, is_active: p.is_active, featured: p.featured, best_seller: p.best_seller, new_arrival: p.new_arrival }) });
       if (!res.ok) throw new Error('Could not update product');
     },
     onSuccess: () => {

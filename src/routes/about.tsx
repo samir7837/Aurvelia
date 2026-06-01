@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Leaf, FlaskConical, ShieldCheck, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { apiUrl } from "@/lib/api";
 
 interface StoryContent {
   heading: string;
@@ -35,7 +36,7 @@ function AboutPage() {
   const { data: story } = useQuery({
     queryKey: ["site_content", "our_story"],
     queryFn: async (): Promise<StoryContent | null> => {
-      const res = await fetch('/api/site_content?key=our_story');
+      const res = await fetch(apiUrl('/api/site_content?key=our_story'));
       if (!res.ok) return null;
       const data = await res.json();
       return (data?.value as unknown as StoryContent) ?? null;

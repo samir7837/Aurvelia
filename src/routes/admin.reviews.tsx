@@ -6,6 +6,7 @@ import { Trash2 } from "lucide-react";
 import { StarRating } from "@/components/StarRating";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { apiUrl } from "@/lib/api";
 
 export const Route = createFileRoute("/admin/reviews")({
   component: AdminReviews,
@@ -28,11 +29,11 @@ function AdminReviews() {
   const { data: reviews = [], isLoading } = useQuery({
     queryKey: ["admin", "reviews"],
     queryFn: async (): Promise<(ReviewRow & { productName: string })[]> => {
-      const res = await fetch('/api/reviews');
+      const res = await fetch(apiUrl('/api/reviews'));
       if (!res.ok) throw new Error('Could not load reviews');
       const rows = (await res.json()) as ReviewRow[];
       const ids = Array.from(new Set(rows.map((r) => r.product_id)));
-      const prodRes = await fetch(`/api/products?ids=${ids.join(',')}`);
+      const prodRes = await fetch(apiUrl(`/api/products?ids=${ids.join(',')}`));
       const products = prodRes.ok ? (await prodRes.json()) : [];
       return rows.map((r) => ({
         ...r,
@@ -44,7 +45,7 @@ function AdminReviews() {
   const remove = useMutation({
     mutationFn: async (id: string) => {
       const token = localStorage.getItem('aurvelia_token');
-      const res = await fetch(`/api/reviews/${id}`, { method: 'DELETE', headers: token ? { Authorization: `Bearer ${token}` } : {} });
+      const res = await fetch(apiUrl(`/api/reviews/${id}`), { method: 'DELETE', headers: token ? { Authorization: `Bearer ${token}` } : {} });
       if (!res.ok) throw new Error('Could not delete review');
     },
     onSuccess: () => {

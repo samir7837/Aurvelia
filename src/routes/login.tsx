@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { apiUrl } from "@/lib/api";
 
 export const Route = createFileRoute("/login")({
   head: () => ({ meta: [{ title: "Sign In — Aurvelia" }] }),
@@ -28,7 +29,7 @@ function LoginPage() {
     const form = new FormData(e.currentTarget);
     setLoading(true);
     try {
-      const res = await fetch('/api/auth/login', {
+      const res = await fetch(apiUrl('/api/auth/login'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: String(form.get('email')), password: String(form.get('password')) }),
@@ -49,7 +50,7 @@ function LoginPage() {
     const form = new FormData(e.currentTarget);
     setLoading(true);
     try {
-      const res = await fetch('/api/auth/register', {
+      const res = await fetch(apiUrl('/api/auth/register'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: String(form.get('email')), password: String(form.get('password')), full_name: String(form.get('name')) }),

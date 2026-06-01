@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { apiUrl } from "@/lib/api";
 import {
   RadioGroup,
   RadioGroupItem,
@@ -64,7 +65,7 @@ function CheckoutPage() {
 
     try {
       const token = localStorage.getItem('aurvelia_token');
-      const res = await fetch('/api/orders', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: token ? `Bearer ${token}` : '' }, body: JSON.stringify({ user_id: user.id, order_number: orderNumber, items: orderItems, subtotal, tax, shipping_fee: shipping, total, shipping_address: address, payment_method: payment, payment_status: 'paid', order_status: 'confirmed', transaction_id: 'TXN' + Math.random().toString(36).slice(2, 11).toUpperCase(), payment_id: 'PAY' + Math.random().toString(36).slice(2, 11).toUpperCase() }) });
+      const res = await fetch(apiUrl('/api/orders'), { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: token ? `Bearer ${token}` : '' }, body: JSON.stringify({ user_id: user.id, order_number: orderNumber, items: orderItems, subtotal, tax, shipping_fee: shipping, total, shipping_address: address, payment_method: payment, payment_status: 'paid', order_status: 'confirmed', transaction_id: 'TXN' + Math.random().toString(36).slice(2, 11).toUpperCase(), payment_id: 'PAY' + Math.random().toString(36).slice(2, 11).toUpperCase() }) });
       if (!res.ok) {
         setProcessing(false);
         toast.error('Payment failed. Please try again.');

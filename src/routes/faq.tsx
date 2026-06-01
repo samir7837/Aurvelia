@@ -8,6 +8,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
+import { apiUrl } from "@/lib/api";
 
 interface Faq {
   id: string;
@@ -37,7 +38,7 @@ function FaqPage() {
   const { data: faqs = [], isLoading } = useQuery({
     queryKey: ["faqs"],
     queryFn: async (): Promise<Faq[]> => {
-      const res = await fetch('/api/faqs?active=true');
+      const res = await fetch(apiUrl('/api/faqs?active=true'));
       if (!res.ok) throw new Error('Could not load faqs');
       return (await res.json()) as Faq[];
     },

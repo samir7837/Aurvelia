@@ -24,6 +24,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { WishlistButton } from "@/components/WishlistButton";
+import { apiUrl } from "@/lib/api";
 
 export const Route = createFileRoute("/product/$slug")({
   component: ProductDetail,
@@ -50,7 +51,7 @@ function ProductDetail() {
   const { data: product, isLoading } = useQuery({
     queryKey: ["product", slug],
     queryFn: async (): Promise<Product | null> => {
-      const res = await fetch(`/api/products?slug=${encodeURIComponent(slug)}`);
+      const res = await fetch(apiUrl(`/api/products?slug=${encodeURIComponent(slug)}`));
       if (!res.ok) return null;
       const data = await res.json();
       return (data && data.length ? data[0] : null) as Product | null;
@@ -61,7 +62,7 @@ function ProductDetail() {
     queryKey: ["reviews", product?.id],
     enabled: !!product,
     queryFn: async (): Promise<Review[]> => {
-      const res = await fetch(`/api/reviews?product_id=${product!.id}`);
+      const res = await fetch(apiUrl(`/api/reviews?product_id=${product!.id}`));
       if (!res.ok) return [];
       return (await res.json()) as Review[];
     },
@@ -223,7 +224,7 @@ function ReviewsSection({
       (user.user_metadata?.full_name as string) || user.email?.split("@")[0] || "Customer";
     try {
       const token = localStorage.getItem('aurvelia_token');
-      const res = await fetch('/api/reviews', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: token ? `Bearer ${token}` : '' }, body: JSON.stringify({ product_id: productId, user_id: user.id, rating, comment, author_name: authorName }) });
+      const res = await fetch(apiUrl('/api/reviews'), { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: token ? `Bearer ${token}` : '' }, body: JSON.stringify({ product_id: productId, user_id: user.id, rating, comment, author_name: authorName }) });
       if (!res.ok) {
         throw new Error('Could not submit review');
       }

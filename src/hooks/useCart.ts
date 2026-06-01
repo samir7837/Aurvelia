@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useAuth } from "@/context/auth";
 import type { Product } from "@/lib/products";
+import { apiUrl } from "@/lib/api";
 
 export interface CartRow {
   id: string;
@@ -19,7 +20,7 @@ export function useCart() {
     enabled: !!user,
     queryFn: async (): Promise<CartRow[]> => {
       const token = user?.id ? (localStorage.getItem('aurvelia_token') ?? null) : null;
-      const res = await fetch('/api/cart', { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+      const res = await fetch(apiUrl('/api/cart'), { headers: token ? { Authorization: `Bearer ${token}` } : {} });
       if (!res.ok) throw new Error('Could not load cart');
       const data = await res.json();
       return data as CartRow[];
@@ -32,13 +33,13 @@ export function useCart() {
       const token = localStorage.getItem('aurvelia_token');
       const existing = items.find((i) => i.product_id === productId);
       if (existing) {
-        await fetch(`/api/cart/${existing.id}`, {
+        await fetch(apiUrl(`/api/cart/${existing.id}`), {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
           body: JSON.stringify({ quantity: existing.quantity + quantity }),
         });
       } else {
-        await fetch('/api/cart', {
+        await fetch(apiUrl('/api/cart'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
           body: JSON.stringify({ product_id: productId, quantity }),
@@ -57,9 +58,9 @@ export function useCart() {
     mutationFn: async ({ id, quantity }: { id: string; quantity: number }) => {
       const token = localStorage.getItem('aurvelia_token');
       if (quantity <= 0) {
-        await fetch(`/api/cart/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+        await fetch(apiUrl(`/api/cart/${id}`), { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
       } else {
-        await fetch(`/api/cart/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ quantity }) });
+        await fetch(apiUrl(`/api/cart/${id}`), { method: 'PATCH', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ quantity }) });
       }
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["cart"] }),
@@ -68,7 +69,7 @@ export function useCart() {
   const remove = useMutation({
     mutationFn: async (id: string) => {
       const token = localStorage.getItem('aurvelia_token');
-      await fetch(`/api/cart/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+      await fetch(apiUrl(`/api/cart/${id}`), { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["cart"] });
@@ -79,7 +80,7 @@ export function useCart() {
   const clear = async () => {
     if (!user) return;
     const token = localStorage.getItem('aurvelia_token');
-    await fetch('/api/cart', { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+    await fetch(apiUrl('/api/cart'), { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
     qc.invalidateQueries({ queryKey: ["cart"] });
   };
 

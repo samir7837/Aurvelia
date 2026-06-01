@@ -7,6 +7,7 @@ import { ProductCard } from "@/components/ProductCard";
 import { categoryImages } from "@/lib/products";
 import { Button } from "@/components/ui/button";
 import hero from "@/assets/hero.jpg";
+import { apiUrl } from "@/lib/api";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -31,7 +32,7 @@ function Index() {
   const { data: featured = [] } = useQuery({
     queryKey: ["products", "featured-home"],
     queryFn: async (): Promise<Product[]> => {
-      const res = await fetch('/api/products?limit=8&active=true');
+      const res = await fetch(apiUrl('/api/products?limit=8&active=true'));
       if (!res.ok) throw new Error('Could not load products');
       return (await res.json()) as Product[];
     },

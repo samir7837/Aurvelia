@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { apiUrl } from "@/lib/api";
 
 export const Route = createFileRoute("/admin/messages")({
   component: AdminMessages,
@@ -31,7 +32,7 @@ function AdminMessages() {
     queryKey: ["admin", "messages"],
     queryFn: async (): Promise<Message[]> => {
       const token = localStorage.getItem('aurvelia_token');
-      const res = await fetch('/api/admin/messages', { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+      const res = await fetch(apiUrl('/api/admin/messages'), { headers: token ? { Authorization: `Bearer ${token}` } : {} });
       if (!res.ok) throw new Error('Could not load messages');
       return (await res.json()) as Message[];
     },
@@ -41,7 +42,7 @@ function AdminMessages() {
     queryKey: ["admin", "subscribers"],
     queryFn: async (): Promise<Subscriber[]> => {
       const token = localStorage.getItem('aurvelia_token');
-      const res = await fetch('/api/admin/subscribers', { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+      const res = await fetch(apiUrl('/api/admin/subscribers'), { headers: token ? { Authorization: `Bearer ${token}` } : {} });
       if (!res.ok) throw new Error('Could not load subscribers');
       return (await res.json()) as Subscriber[];
     },
@@ -50,7 +51,7 @@ function AdminMessages() {
   const setStatus = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
       const token = localStorage.getItem('aurvelia_token');
-      const res = await fetch(`/api/admin/messages/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ status }) });
+      const res = await fetch(apiUrl(`/api/admin/messages/${id}`), { method: 'PATCH', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ status }) });
       if (!res.ok) throw new Error('Could not update message');
     },
     onSuccess: () => {

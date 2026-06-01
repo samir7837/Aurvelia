@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { apiUrl } from "@/lib/api";
 
 export const Route = createFileRoute("/admin/content")({
   component: AdminContent,
@@ -30,7 +31,7 @@ function AdminContent() {
     queryKey: ["admin", "our_story"],
     queryFn: async () => {
       const token = localStorage.getItem('aurvelia_token');
-      const res = await fetch('/api/site_content?key=our_story', { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+      const res = await fetch(apiUrl('/api/site_content?key=our_story'), { headers: token ? { Authorization: `Bearer ${token}` } : {} });
       if (!res.ok) throw new Error('Could not load story');
       const data = await res.json();
       return (data?.value as { heading?: string; body?: string }) ?? {};
@@ -49,7 +50,7 @@ function AdminContent() {
   const saveStory = useMutation({
     mutationFn: async () => {
       const token = localStorage.getItem('aurvelia_token');
-      const res = await fetch('/api/site_content/our_story', { method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ value: { heading, body } }) });
+      const res = await fetch(apiUrl('/api/site_content/our_story'), { method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ value: { heading, body } }) });
       if (!res.ok) throw new Error('Could not save story');
     },
     onSuccess: () => {
@@ -63,7 +64,7 @@ function AdminContent() {
   const { data: faqs = [] } = useQuery({
     queryKey: ["admin", "faqs"],
     queryFn: async (): Promise<Faq[]> => {
-      const res = await fetch('/api/faqs');
+      const res = await fetch(apiUrl('/api/faqs'));
       if (!res.ok) throw new Error('Could not load faqs');
       return (await res.json()) as Faq[];
     },
@@ -72,7 +73,7 @@ function AdminContent() {
   const addFaq = useMutation({
     mutationFn: async () => {
       const token = localStorage.getItem('aurvelia_token');
-      const res = await fetch('/api/faqs', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ question: 'New question', answer: 'Answer here', category: 'General', sort_order: (faqs.length || 0) + 1 }) });
+      const res = await fetch(apiUrl('/api/faqs'), { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ question: 'New question', answer: 'Answer here', category: 'General', sort_order: (faqs.length || 0) + 1 }) });
       if (!res.ok) throw new Error('Could not add FAQ');
     },
     onSuccess: () => {
@@ -85,7 +86,7 @@ function AdminContent() {
   const saveFaq = useMutation({
     mutationFn: async (f: Faq) => {
       const token = localStorage.getItem('aurvelia_token');
-      const res = await fetch(`/api/faqs/${f.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ question: f.question, answer: f.answer, category: f.category, is_active: f.is_active }) });
+      const res = await fetch(apiUrl(`/api/faqs/${f.id}`), { method: 'PATCH', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ question: f.question, answer: f.answer, category: f.category, is_active: f.is_active }) });
       if (!res.ok) throw new Error('Could not save FAQ');
     },
     onSuccess: () => {
@@ -99,7 +100,7 @@ function AdminContent() {
   const deleteFaq = useMutation({
     mutationFn: async (id: string) => {
       const token = localStorage.getItem('aurvelia_token');
-      const res = await fetch(`/api/faqs/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+      const res = await fetch(apiUrl(`/api/faqs/${id}`), { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
       if (!res.ok) throw new Error('Could not delete FAQ');
     },
     onSuccess: () => {
